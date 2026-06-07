@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "kiberone-partnerka"
-database_id = "REPLACE_WITH_ID_FROM_WRANGLER_D1_CREATE"
+database_id = "01ae48ad-781f-4023-a015-186ac390a943"
