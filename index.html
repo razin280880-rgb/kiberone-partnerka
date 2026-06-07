@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6B2FB5">
+  <title>KIBERone — Стань кибергероем</title>
+  <meta name="description" content="Создай своего кибергероя и получи персональный план развития ребёнка в программировании.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/landing.css">
+
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ШАГ 1: Приветствие + старт игры -->
+    <section id="screen-welcome" class="screen active">
+      <div class="screen-inner">
+        <div class="logo-row">
+          <div class="logo">KIBER<span>one</span></div>
+          <div class="live-counter">
+            🔥 Сегодня в <span id="city-name">Челнах</span> уже <span id="live-count">47</span> детей стали кибергероями
+          </div>
+        </div>
+
+        <h1>Привет!<br>Готов стать <span class="accent">кибергероем</span>?</h1>
+        <p class="lead">
+          За 60 секунд ты создашь своего персонажа, пройдёшь мини-квест и получишь персональный план развития в программировании.
+        </p>
+
+        <button id="btn-start" class="btn-primary" type="button">
+          Поехали! →
+        </button>
+
+        <div class="hint">
+          <span class="hint-icon">🎁</span>
+          В конце — твой персональный план + видео от твоего будущего наставника
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 2: Конструктор кибергероя -->
+    <section id="screen-game" class="screen">
+      <div class="screen-inner">
+        <header class="game-header">
+          <div class="step">Шаг <span id="step-current">1</span> из 4</div>
+          <div class="step-bar">
+            <div class="step-bar-fill" id="step-bar"></div>
+          </div>
+        </header>
+
+        <div class="hero-canvas">
+          <div class="hero-visual" id="hero-visual">
+            <div class="hero-glow"></div>
+            <div class="hero-body" id="hero-body" data-color="purple">
+              <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="g-body" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0.9"/>
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0.6"/>
+                  </linearGradient>
+                </defs>
+                <!-- голова -->
+                <circle cx="100" cy="60" r="42" fill="url(#g-body)" stroke="#fff" stroke-width="3"/>
+                <!-- глаза -->
+                <circle cx="85" cy="55" r="6" fill="#1A1A2E"/>
+                <circle cx="115" cy="55" r="6" fill="#1A1A2E"/>
+                <circle cx="87" cy="53" r="2" fill="#fff"/>
+                <circle cx="117" cy="53" r="2" fill="#fff"/>
+                <!-- улыбка -->
+                <path d="M 80 75 Q 100 88 120 75" stroke="#1A1A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- тело -->
+                <rect x="65" y="105" width="70" height="100" rx="20" fill="url(#g-body)" stroke="#fff" stroke-width="3"/>
+                <!-- грудной экран -->
+                <rect x="80" y="125" width="40" height="30" rx="5" fill="#1A1A2E" stroke="#FFD43B" stroke-width="2"/>
+                <text x="100" y="146" text-anchor="middle" fill="#FFD43B" font-size="14" font-family="monospace" id="hero-screen-text">&lt;K1&gt;</text>
+                <!-- руки -->
+                <rect x="40" y="115" width="20" height="70" rx="10" fill="url(#g-body)" stroke="#fff" stroke-width="2"/>
+                <rect x="140" y="115" width="20" height="70" rx="10" fill="url(#g-body)" stroke="#fff" stroke-width="2"/>
+                <!-- ноги -->
+                <rect x="75" y="210" width="20" height="50" rx="8" fill="url(#g-body)" stroke="#fff" stroke-width="2"/>
+                <rect x="105" y="210" width="20" height="50" rx="8" fill="url(#g-body)" stroke="#fff" stroke-width="2"/>
+                <!-- оружие/инструмент -->
+                <g id="hero-weapon"></g>
+              </svg>
+              <div class="hero-name-tag" id="hero-name-tag">Без имени</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ШАГ 2.1: цвет -->
+        <div class="choice-block" id="choice-color">
+          <h3>Выбери цвет своего героя</h3>
+          <div class="choice-grid">
+            <button class="choice color-purple" data-color="purple" data-color-hex="#6B2FB5" type="button"><span>Фиолетовый</span></button>
+            <button class="choice color-cyan" data-color="cyan" data-color-hex="#00C9FF" type="button"><span>Голубой</span></button>
+            <button class="choice color-orange" data-color="orange" data-color-hex="#FF6B35" type="button"><span>Оранжевый</span></button>
+            <button class="choice color-green" data-color="green" data-color-hex="#2EC4B6" type="button"><span>Зелёный</span></button>
+            <button class="choice color-pink" data-color="pink" data-color-hex="#FF3DA8" type="button"><span>Розовый</span></button>
+            <button class="choice color-yellow" data-color="yellow" data-color-hex="#FFD43B" type="button"><span>Жёлтый</span></button>
+          </div>
+        </div>
+
+        <!-- ШАГ 2.2: инструмент -->
+        <div class="choice-block" id="choice-weapon" hidden>
+          <h3>Твой главный инструмент?</h3>
+          <div class="choice-grid">
+            <button class="choice" data-weapon="laptop" type="button">
+              <div class="choice-emoji">💻</div><span>Ноутбук кодера</span>
+            </button>
+            <button class="choice" data-weapon="sword" type="button">
+              <div class="choice-emoji">⚔️</div><span>Меч алгоритмов</span>
+            </button>
+            <button class="choice" data-weapon="shield" type="button">
+              <div class="choice-emoji">🛡️</div><span>Щит данных</span>
+            </button>
+            <button class="choice" data-weapon="wand" type="button">
+              <div class="choice-emoji">🪄</div><span>Палочка ИИ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ШАГ 2.3: способность -->
+        <div class="choice-block" id="choice-power" hidden>
+          <h3>Твоя суперспособность?</h3>
+          <div class="choice-grid two-col">
+            <button class="choice" data-power="speed" type="button">
+              <div class="choice-emoji">⚡</div><span>Скорость мысли</span>
+            </button>
+            <button class="choice" data-power="logic" type="button">
+              <div class="choice-emoji">🧠</div><span>Чистая логика</span>
+            </button>
+            <button class="choice" data-power="creativity" type="button">
+              <div class="choice-emoji">🎨</div><span>Творчество</span>
+            </button>
+            <button class="choice" data-power="strategy" type="button">
+              <div class="choice-emoji">♟️</div><span>Стратегия</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ШАГ 2.4: имя -->
+        <div class="choice-block" id="choice-name" hidden>
+          <h3>Как зовут твоего героя?</h3>
+          <p class="sub">Напиши своё настоящее имя — на пригласительном будет оно</p>
+          <input type="text" id="hero-name-input" class="text-input" placeholder="Например, Эмиль" maxlength="20" autocomplete="off">
+          <button id="btn-name-confirm" class="btn-primary" type="button" disabled>Готово →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 3: Результат игры + микро-коммитмент -->
+    <section id="screen-result" class="screen">
+      <div class="screen-inner">
+        <div class="result-card">
+          <div class="result-badge">Уровень 3 из 5</div>
+          <div class="result-hero">
+            <div class="hero-visual hero-visual-small" id="result-hero-visual"></div>
+          </div>
+          <h2>Ты прошёл, <span id="result-name">друг</span>!</h2>
+          <p class="result-text">
+            Твой кибергерой готов. Ты раскрыл <strong>2 из 5 секретов кодера</strong>. Остальные 3 — на пробном уроке в KIBERone.
+          </p>
+
+          <div class="curiosity-list">
+            <div class="curiosity-item revealed">
+              <span class="check">✅</span> Создал персонажа
+            </div>
+            <div class="curiosity-item revealed">
+              <span class="check">✅</span> Выбрал суперспособность
+            </div>
+            <div class="curiosity-item locked">
+              <span class="lock">🔒</span> Напишешь свою игру
+            </div>
+            <div class="curiosity-item locked">
+              <span class="lock">🔒</span> Создашь умного помощника с ИИ
+            </div>
+            <div class="curiosity-item locked">
+              <span class="lock">🔒</span> Соберёшь команду героев
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-want-plan" class="btn-primary btn-large" type="button">
+          Да, хочу узнать программу для моего ребёнка
+        </button>
+        <p class="micro-hint">Получи персональный план развития бесплатно — мама/папа вводят свои данные на следующем шаге</p>
+      </div>
+    </section>
+
+    <!-- ШАГ 4: Форма (родитель) -->
+    <section id="screen-form" class="screen">
+      <div class="screen-inner">
+        <div class="form-header">
+          <h2>Куда отправить план развития?</h2>
+          <p class="sub">Введите данные родителя — план придёт в WhatsApp за 60 секунд</p>
+        </div>
+
+        <div class="timer-banner">
+          ⏱ Бонус активен ещё <span id="timer">24:00:00</span> — выберите слот пробного со скидкой 100%
+        </div>
+
+        <form id="form-lead" novalidate>
+          <div class="form-row">
+            <label for="f-child-name">Имя ребёнка</label>
+            <input type="text" id="f-child-name" name="child_name" required maxlength="40" autocomplete="given-name" placeholder="Эмиль">
+          </div>
+
+          <div class="form-row">
+            <label for="f-child-age">Возраст ребёнка</label>
+            <select id="f-child-age" name="child_age" required>
+              <option value="">Выбрать возраст</option>
+              <option value="5">5 лет</option>
+              <option value="6">6 лет</option>
+              <option value="7">7 лет</option>
+              <option value="8">8 лет</option>
+              <option value="9">9 лет</option>
+              <option value="10">10 лет</option>
+              <option value="11">11 лет</option>
+              <option value="12">12 лет</option>
+              <option value="13">13 лет</option>
+              <option value="14">14 лет</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="f-parent-whatsapp">WhatsApp родителя</label>
+            <input type="tel" id="f-parent-whatsapp" name="parent_whatsapp" required maxlength="20" autocomplete="tel" placeholder="+7 ___ ___ __ __">
+            <span class="form-hint">Туда придёт пригласительный и план развития</span>
+          </div>
+
+          <input type="hidden" id="f-partner-slug" name="partner_slug">
+          <input type="hidden" id="f-session-id" name="session_id">
+          <input type="hidden" id="f-hero-config" name="hero_config">
+
+          <button type="submit" id="btn-submit" class="btn-primary btn-large">
+            Получить план развития →
+          </button>
+
+          <p class="legal">
+            Нажимая кнопку, вы соглашаетесь с
+            <a href="/legal/policy" target="_blank">политикой конфиденциальности</a>.
+            Никаких подписок и платежей.
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ШАГ 5: Награда -->
+    <section id="screen-reward" class="screen">
+      <div class="screen-inner reward-inner">
+        <div class="confetti-burst" aria-hidden="true">🎉</div>
+        <h2>Поздравляем, <span id="reward-parent-target">друг</span>!</h2>
+        <p class="reward-intro">
+          Вот всё, что мы подготовили для <strong id="reward-child-name">вашего ребёнка</strong>:
+        </p>
+
+        <!-- 1. Картинка-герой персонализированная -->
+        <div class="reward-card hero-card">
+          <div class="hero-visual hero-visual-small" id="reward-hero-visual"></div>
+          <div class="hero-card-text">
+            <div class="hero-card-title" id="reward-hero-title">Кибергерой Эмиль</div>
+            <div class="hero-card-sub">Уровень 3 — Юный кодер</div>
+            <button class="btn-secondary" id="btn-share-hero">📸 Сохранить картинку</button>
+          </div>
+        </div>
+
+        <!-- 2. PDF-роадмап -->
+        <div class="reward-card">
+          <div class="reward-icon">📋</div>
+          <div class="reward-content">
+            <h3>Персональный план развития</h3>
+            <p>4 ступени программирования для возраста <span id="reward-age">9</span> лет — что освоит за год, к какому проекту придёт</p>
+            <a id="reward-pdf-link" href="#" class="btn-secondary" target="_blank" rel="noopener">Открыть PDF →</a>
+          </div>
+        </div>
+
+        <!-- 3. Видео-приветствие тьютора -->
+        <div class="reward-card">
+          <div class="reward-icon">🎥</div>
+          <div class="reward-content">
+            <h3>Видео-приветствие наставника</h3>
+            <p>60 секунд от <span id="reward-tutor-name">тьютора</span> из <span id="reward-city">Челнов</span></p>
+            <button id="btn-play-video" class="btn-secondary" type="button">▶ Смотреть</button>
+            <video id="reward-video" class="reward-video" controls hidden></video>
+          </div>
+        </div>
+
+        <!-- 4. Электронный пригласительный -->
+        <div class="reward-card invitation-card">
+          <div class="reward-icon">🎫</div>
+          <div class="reward-content">
+            <h3>Электронный пригласительный</h3>
+            <p>Покажите на ресепшене — пробный урок бесплатно</p>
+            <div class="invitation-preview">
+              <div class="invitation-name" id="invitation-name">Эмиль</div>
+              <div class="invitation-sub">Приглашается на пробный урок KIBERone</div>
+              <div class="invitation-qr-placeholder">QR</div>
+            </div>
+            <a id="invitation-download" href="#" class="btn-secondary" download>Сохранить пригласительный</a>
+          </div>
+        </div>
+
+        <!-- 5. Слот пробного — главный CTA -->
+        <div class="reward-card slot-card">
+          <h3>🔥 Забронируй пробный сейчас</h3>
+          <p class="slot-bonus">
+            Лагерный бонус: при записи в течение <span id="slot-timer">23:47:12</span> — дополнительный урок в подарок
+          </p>
+          <div class="slot-grid" id="slot-grid">
+            <!-- слоты подставляются JS из AlphaCRM -->
+            <button class="slot" data-slot="2026-06-08T10:00:00">Сб, 8 июня в 10:00</button>
+            <button class="slot" data-slot="2026-06-08T11:30:00">Сб, 8 июня в 11:30</button>
+            <button class="slot" data-slot="2026-06-09T10:00:00">Вс, 9 июня в 10:00</button>
+            <button class="slot" data-slot="2026-06-09T16:00:00">Вс, 9 июня в 16:00</button>
+          </div>
+          <button id="btn-book-slot" class="btn-primary" type="button" disabled>Забронировать</button>
+        </div>
+
+        <!-- 6. Жетон-обязательство -->
+        <div class="reward-card token-card">
+          <div class="token-icon">🪙</div>
+          <div class="token-text">
+            <strong>Не забудь жетон!</strong>
+            Тот металлический кружок из куба — принесёшь на пробный → получишь приз <strong>в 2 раза ценнее</strong>.
+          </div>
+        </div>
+
+        <!-- 7. Партнёр-благодарность -->
+        <div class="reward-card partner-card">
+          <p>
+            Спасибо <strong id="reward-partner-name">партнёру</strong> — они помогают детям расти 💜
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Стандартный скрипт -->
+  <script src="/assets/js/landing.js" defer></script>
+  <script src="/assets/js/game.js" defer></script>
+  <script src="/assets/js/reward.js" defer></script>
+
+  <!-- Yandex.Metrika placeholder -->
+  <script>
+    (function(){
+      // window.YM_COUNTER && (function(m,e,t,r,i,k,a){...})
+    })();
+  </script>
+</body>
+</html>

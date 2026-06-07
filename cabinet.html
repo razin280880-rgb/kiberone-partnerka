@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Партнёрский кабинет — KIBERone</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/cabinet.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body class="cabinet-body">
+
+  <header class="cab-header">
+    <div class="cab-header-inner">
+      <div class="logo">KIBER<span>one</span> Partner</div>
+      <nav class="cab-tabs">
+        <button class="cab-tab active" data-tab="dashboard">Дашборд</button>
+        <button class="cab-tab" data-tab="leads">Анкеты</button>
+        <button class="cab-tab" data-tab="payouts">Выплаты</button>
+        <button class="cab-tab" data-tab="materials">Материалы</button>
+        <button class="cab-tab" data-tab="loyalty">Лояльность</button>
+        <button class="cab-tab" data-tab="support">Поддержка</button>
+      </nav>
+      <div class="cab-user">
+        <div class="cab-user-name" id="cab-partner-name">Загрузка...</div>
+        <div class="cab-user-meta" id="cab-partner-meta"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="cab-main">
+
+    <!-- ========== Дашборд ========== -->
+    <section class="cab-pane active" data-pane="dashboard">
+
+      <div class="cab-stats-grid">
+        <div class="stat-card stat-primary">
+          <div class="stat-label">Начислено в этом месяце</div>
+          <div class="stat-value" id="stat-amount">— ₽</div>
+          <div class="stat-trend" id="stat-amount-trend"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Анкет квалифицировано</div>
+          <div class="stat-value" id="stat-leads">—</div>
+          <div class="stat-trend" id="stat-leads-trend"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Пробных состоялось</div>
+          <div class="stat-value" id="stat-trials">—</div>
+          <div class="stat-trend" id="stat-trials-trend"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Оплат годовых</div>
+          <div class="stat-value" id="stat-paid">—</div>
+          <div class="stat-trend" id="stat-paid-trend"></div>
+        </div>
+      </div>
+
+      <div class="cab-row two">
+        <div class="cab-card">
+          <h3>Прогноз до конца месяца</h3>
+          <div class="forecast-block">
+            <div class="forecast-current">
+              При текущем темпе: <strong id="forecast-leads">— анкет</strong>
+            </div>
+            <div class="forecast-bar">
+              <div class="forecast-bar-current" id="forecast-bar-current"></div>
+            </div>
+            <div class="forecast-target">
+              <span>До нормы 5/нед:</span>
+              <strong id="forecast-status">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="cab-card">
+          <h3>Воронка</h3>
+          <div class="funnel">
+            <div class="funnel-row">
+              <div class="funnel-label">Сканы QR</div>
+              <div class="funnel-bar"><div class="funnel-bar-fill" id="fb-scans" style="width:100%;background:#00C9FF"></div></div>
+              <div class="funnel-num" id="fn-scans">—</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Анкеты</div>
+              <div class="funnel-bar"><div class="funnel-bar-fill" id="fb-leads" style="background:#6B2FB5"></div></div>
+              <div class="funnel-num" id="fn-leads">—</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Пробные</div>
+              <div class="funnel-bar"><div class="funnel-bar-fill" id="fb-trials" style="background:#FFD43B"></div></div>
+              <div class="funnel-num" id="fn-trials">—</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Оплаты</div>
+              <div class="funnel-bar"><div class="funnel-bar-fill" id="fb-paid" style="background:#2EC4B6"></div></div>
+              <div class="funnel-num" id="fn-paid">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cab-row two">
+        <div class="cab-card">
+          <h3>Сканы за 30 дней</h3>
+          <div class="chart" id="chart-scans" aria-label="Сканы по дням"></div>
+        </div>
+
+        <div class="cab-card rating-card">
+          <h3>Ваша позиция в городе</h3>
+          <div class="rating-place" id="rating-place">— из —</div>
+          <div class="rating-city" id="rating-city">в Челнах</div>
+          <div class="rating-tier">
+            <span class="tier-badge" id="tier-badge">Базовый</span>
+            <div class="tier-desc" id="tier-desc">Достигните 10 анкет/мес 3 месяца подряд → Серебряный</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== Анкеты ========== -->
+    <section class="cab-pane" data-pane="leads">
+      <div class="cab-card">
+        <div class="card-header">
+          <h3>Все анкеты по вашему UTM</h3>
+          <div class="filter-row">
+            <select id="filter-period">
+              <option value="month">Этот месяц</option>
+              <option value="prev_month">Прошлый месяц</option>
+              <option value="all">Всё время</option>
+            </select>
+            <select id="filter-status">
+              <option value="all">Все статусы</option>
+              <option value="qualified">Квалифицирована</option>
+              <option value="pending">В прозвоне</option>
+              <option value="trial_booked">Записан на пробный</option>
+              <option value="trial_came">Пришёл на пробный</option>
+              <option value="paid">Оплатил</option>
+              <option value="rejected">Не квалифицирована</option>
+            </select>
+          </div>
+        </div>
+
+        <table class="cab-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Возраст</th>
+              <th>Статус</th>
+              <th>Начислено</th>
+              <th>Комментарий</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr><td colspan="6" class="empty">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== Выплаты ========== -->
+    <section class="cab-pane" data-pane="payouts">
+      <div class="cab-card">
+        <h3>История выплат</h3>
+        <table class="cab-table">
+          <thead>
+            <tr>
+              <th>Период</th>
+              <th>Анкет</th>
+              <th>Пробных</th>
+              <th>Оплат</th>
+              <th>Начислено</th>
+              <th>Статус</th>
+              <th>Акт</th>
+            </tr>
+          </thead>
+          <tbody id="payouts-tbody">
+            <tr><td colspan="7" class="empty">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cab-card">
+        <h3>Реквизиты для выплат</h3>
+        <div class="requisites">
+          <div class="req-row"><span>Получатель:</span><strong id="req-name">—</strong></div>
+          <div class="req-row"><span>ИНН:</span><strong id="req-inn">—</strong></div>
+          <div class="req-row"><span>Расчётный счёт:</span><strong id="req-account">—</strong></div>
+          <div class="req-row"><span>Банк:</span><strong id="req-bank">—</strong></div>
+          <button class="btn-secondary" id="btn-edit-req">Изменить реквизиты</button>
+          <p class="hint">Изменение требует подтверждения через Telegram.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Материалы ========== -->
+    <section class="cab-pane" data-pane="materials">
+      <div class="cab-cards-row">
+        <div class="material-card">
+          <div class="material-icon">📜</div>
+          <h4>Скрипт администратора</h4>
+          <p>Карточка A6 со скриптом для печати</p>
+          <a href="/materials/skript-administrator-A6.pdf" class="btn-secondary" download>Скачать PDF</a>
+        </div>
+
+        <div class="material-card">
+          <div class="material-icon">🎬</div>
+          <h4>Видео-инструкция администратору</h4>
+          <p>1 минута — как объяснять про куб посетителям</p>
+          <a href="/materials/admin-video.mp4" class="btn-secondary" target="_blank">Смотреть</a>
+        </div>
+
+        <div class="material-card">
+          <div class="material-icon">📸</div>
+          <h4>Фото и видео Куба</h4>
+          <p>Для соцсетей вашего бизнеса</p>
+          <a href="/materials/kub-media.zip" class="btn-secondary" download>Скачать архив</a>
+        </div>
+
+        <div class="material-card">
+          <div class="material-icon">📱</div>
+          <h4>Сторис для Instagram/VK</h4>
+          <p>Готовые шаблоны 1080×1920</p>
+          <a href="/materials/stories.zip" class="btn-secondary" download>Скачать архив</a>
+        </div>
+
+        <div class="material-card highlight">
+          <div class="material-icon">💎</div>
+          <h4>Партнёр приводит партнёра</h4>
+          <p>Рекомендуйте другого детского бизнеса → 1 000 ₽ за подключение + 10 ₽ к вашей ставке на 3 мес.</p>
+          <button class="btn-primary" id="btn-refer">Получить реф-ссылку</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Лояльность ========== -->
+    <section class="cab-pane" data-pane="loyalty">
+      <div class="cab-card loyalty-card">
+        <div class="loyalty-tier">
+          <div class="tier-icon" id="loy-tier-icon">🟢</div>
+          <div>
+            <div class="loy-tier-name" id="loy-tier-name">Базовый</div>
+            <div class="loy-tier-rate">Ставка: <strong id="loy-rate">200 ₽/анкета</strong></div>
+          </div>
+        </div>
+
+        <h4>Прогресс до следующего уровня</h4>
+        <div class="progress-row">
+          <div class="progress-label">Анкет/мес 3 месяца подряд: <strong id="prog-text">5 из 10</strong></div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="prog-bar"></div></div>
+        </div>
+
+        <div class="tiers-list">
+          <div class="tier">
+            <div class="tier-name">🟢 Базовый</div>
+            <div class="tier-cond">По умолчанию после подключения</div>
+            <div class="tier-perk">Базовая ставка</div>
+          </div>
+          <div class="tier">
+            <div class="tier-name">⚪ Серебряный</div>
+            <div class="tier-cond">≥10 анкет/мес 3 мес подряд</div>
+            <div class="tier-perk">+20 ₽ к ставке, приоритет на пополнение призов</div>
+          </div>
+          <div class="tier">
+            <div class="tier-name">🟡 Золотой</div>
+            <div class="tier-cond">≥20 анкет/мес или ≥5 оплат/квартал</div>
+            <div class="tier-perk">+50 ₽ к ставке, ежемесячный пост в нашем Telegram</div>
+          </div>
+          <div class="tier highlight">
+            <div class="tier-name">🏆 Партнёр года</div>
+            <div class="tier-cond">Топ-1 в городе по году</div>
+            <div class="tier-perk">LTV-модель: 10% от оплат на 3 года + рамка</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Поддержка ========== -->
+    <section class="cab-pane" data-pane="support">
+      <div class="cab-cards-row">
+        <div class="cab-card">
+          <h3>Ваш менеджер развития</h3>
+          <div class="mr-card">
+            <div class="mr-avatar" id="mr-avatar">А</div>
+            <div>
+              <div class="mr-name" id="mr-name">Анна</div>
+              <div class="mr-meta">Челны</div>
+              <div class="mr-contacts">
+                <a href="#" id="mr-tg">Telegram</a> · <a href="#" id="mr-wa">WhatsApp</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cab-card">
+          <h3>Сообщить о проблеме</h3>
+          <ul class="support-list">
+            <li><a href="https://t.me/kiberone_partner_bot?start=damage">🛠 Куб повреждён</a></li>
+            <li><a href="https://t.me/kiberone_partner_bot?start=prizes">📦 Кончились призы</a></li>
+            <li><a href="https://t.me/kiberone_partner_bot?start=dispute">⚖️ Оспорить анкету</a></li>
+            <li><a href="https://t.me/kiberone_partner_bot?start=other">💬 Другой вопрос</a></li>
+          </ul>
+        </div>
+
+        <div class="cab-card">
+          <h3>Закрытый канал партнёров</h3>
+          <p>Кейсы, обмен опытом, новости, новые сезонные призы.</p>
+          <a class="btn-primary" href="https://t.me/+kiberone_partners">Вступить</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/assets/js/cabinet.js" defer></script>
+</body>
+</html>

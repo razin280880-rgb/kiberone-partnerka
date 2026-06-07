@@ -1,0 +1,154 @@
+/* === KIBERone Partnership Funnel — Main Styles === */
+
+:root {
+  --color-primary: #6B2FB5;
+  --color-primary-dark: #4E1F89;
+  --color-primary-light: #8C4FD9;
+  --color-accent: #FFD43B;
+  --color-accent-dark: #E8BD1F;
+  --color-cyan: #00C9FF;
+  --color-pink: #FF3DA8;
+  --color-orange: #FF6B35;
+  --color-green: #2EC4B6;
+  --color-dark: #1A1A2E;
+  --color-text: #2A2A3E;
+  --color-text-muted: #6B6B82;
+  --color-bg: #F5F5FA;
+  --color-bg-card: #FFFFFF;
+  --color-border: #E5E5F0;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --shadow-sm: 0 2px 8px rgba(26, 26, 46, 0.06);
+  --shadow-md: 0 6px 24px rgba(107, 47, 181, 0.12);
+  --shadow-lg: 0 14px 48px rgba(107, 47, 181, 0.18);
+
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Manrope', 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+#app { min-height: 100vh; }
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--color-dark);
+  line-height: 1.15;
+}
+
+h1 { font-size: 2.1rem; margin-bottom: 1rem; }
+h2 { font-size: 1.6rem; margin-bottom: 0.8rem; }
+h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+
+.accent { color: var(--color-primary); }
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* === Кнопки === */
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: inherit;
+  color: inherit;
+}
+
+.btn-primary {
+  display: inline-block;
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: center;
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-primary.btn-large { padding: 22px 28px; font-size: 1.15rem; }
+
+.btn-secondary {
+  display: inline-block;
+  padding: 12px 20px;
+  background: white;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-primary);
+  transition: all 0.15s ease;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-secondary:hover { background: var(--color-primary); color: white; text-decoration: none; }
+
+/* === Поля формы === */
+
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: var(--color-text);
+}
+
+.text-input, input[type="text"], input[type="tel"], select {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-family: var(--font-body);
+  background: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  transition: border-color 0.15s ease;
+}
+
+.text-input:focus, input:focus, select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* === Утилиты === */
+
+.sub { color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 1rem; }
+.hint { font-size: 0.85rem; color: var(--color-text-muted); }
+
+@media (max-width: 480px) {
+  html, body { font-size: 15px; }
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.4rem; }
+}
