@@ -240,6 +240,13 @@
           <input type="hidden" id="f-session-id" name="session_id">
           <input type="hidden" id="f-hero-config" name="hero_config">
 
+          <!-- Honeypot: визуально скрыт, но не type=hidden, чтобы бот его не пропускал.
+               Заполняется автоматами — сервер тихо игнорирует такие заявки. -->
+          <div class="hp-field" aria-hidden="true">
+            <label for="f-website">Website</label>
+            <input type="text" id="f-website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+
           <button type="submit" id="btn-submit" class="btn-primary btn-large">
             Получить план развития →
           </button>

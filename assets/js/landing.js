@@ -180,7 +180,9 @@
         child_name: $('#f-child-name').value.trim(),
         child_age: parseInt($('#f-child-age').value, 10),
         parent_whatsapp: $('#f-parent-whatsapp').value.replace(/\D/g, ''),
-        hero_config: state.hero
+        hero_config: state.hero,
+        // honeypot: при заполнении бот забыл его игнорировать → сервер дропнет.
+        website: $('#f-website') ? $('#f-website').value : ''
       };
 
       state.parent = {

@@ -327,6 +327,16 @@
   line-height: 1.4;
 }
 
+/* Honeypot: убирается из потока, но НЕ display:none — иначе боты пропустят. */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  top: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 /* === Screen 5: Reward === */
 
 .reward-inner {

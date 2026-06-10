@@ -1,11 +1,17 @@
 // POST /api/submit — приём анкеты
-// Body: { partner_slug, session_id, child_name, child_age, parent_whatsapp, hero_config }
+// Body: { partner_slug, session_id, child_name, child_age, parent_whatsapp, hero_config, website? }
 //
-// Делает:
+// Защита от ботов и спама:
+//  - honeypot-поле `website`: если заполнено — отбрасываем тихо (200 ok, ничего не пишем).
+//  - timing: между /api/scan и /api/submit должно пройти ≥5 секунд.
+//  - rate-limit: ≤5 анкет в час с одного IP на одного партнёра.
+//
+// Бизнес-логика:
 //  1. Сохранение лида в D1
-//  2. Запись лида в AlphaCRM с тегом партнёра
+//  2. Запись лида в AlfaCRM с тегом партнёра (Краснодар — отдельная инсталляция)
 //  3. Отправка WhatsApp через Wazzup24
-//  4. Возврат данных награды (PDF, видео, слоты)
+//  4. Уведомление партнёра в Telegram (без PII)
+//  5. Возврат данных награды (PDF, видео, слоты)
 
 // legal_entity — по schema.sql: ip_razin / ip_karina / ooo_lab.
 // Эти строки идут в note AlphaCRM (numeric branch ID для AlphaCRM мы пока не задаём — ставится менеджером вручную).
@@ -176,13 +182,56 @@ function buildSlots() {
   return slots;
 }
 
+// Inline-импорт (Pages Functions поддерживают ESM в одной директории).
+import { getIP, rateLimit } from '../_lib/ratelimit.js';
+
+const MIN_FORM_FILL_SECONDS = 5;
+
+async function checkTiming(env, session_id) {
+  if (!env.DB || !session_id) return { ok: true };
+  const row = await env.DB.prepare(
+    'SELECT scanned_at FROM scans WHERE session_id = ? ORDER BY scanned_at ASC LIMIT 1'
+  ).bind(session_id).first();
+  if (!row) return { ok: true };  // нет скана = не блокируем (можно проверять глубже, но это снизит UX)
+  const delta = Math.floor(Date.now() / 1000) - row.scanned_at;
+  return delta < MIN_FORM_FILL_SECONDS
+    ? { ok: false, delta }
+    : { ok: true };
+}
+
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { partner_slug, session_id, child_name, child_age, parent_whatsapp } = body;
+    const { partner_slug, session_id, child_name, child_age, parent_whatsapp, website } = body;
+
+    // Honeypot — поле скрыто в CSS, заполняется только ботом.
+    // Возвращаем 200, чтобы бот не догадался — но ничего не сохраняем.
+    if (website) {
+      console.warn('honeypot triggered', { partner_slug, ip: getIP(request) });
+      return new Response(JSON.stringify({ ok: true, leadId: null }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     if (!partner_slug || !child_name || !child_age || !parent_whatsapp) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
+    }
+
+    // Timing-check.
+    const timing = await checkTiming(env, session_id);
+    if (!timing.ok) {
+      console.warn('form filled too fast', { partner_slug, session_id, delta: timing.delta });
+      return new Response(JSON.stringify({ error: 'too_fast' }), { status: 429 });
+    }
+
+    // Rate-limit: ≤5 анкет/час с одного IP по одному партнёру.
+    const ip = getIP(request);
+    const limit = await rateLimit(env, `submit:${partner_slug}:${ip}`, 5, 3600);
+    if (!limit.ok) {
+      return new Response(
+        JSON.stringify({ error: 'rate_limited', retryAfter: limit.retryAfter }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const cityKey = parseCity(partner_slug);

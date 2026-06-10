@@ -1,0 +1,32 @@
+name: MR digest (Monday morning)
+
+# ПН 09:30 МСК = 06:30 UTC. На полчаса раньше weekly-summary партнёрам,
+# чтобы МР успели глянуть просадки до того, как партнёры напишут вопросы.
+on:
+  schedule:
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger mr-digest endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "X-Cron-Secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            https://partner.it-kiber.ru/api/cron/mr-digest)
+
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+
+          echo "Status: $status"
+          echo "Body: $body"
+
+          if [ "$status" -ne 200 ]; then
+            echo "::error::MR digest failed with status $status"
+            exit 1
+          fi
