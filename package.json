@@ -6,10 +6,14 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "dev": "wrangler pages dev .",
+    "serve:static": "python -m http.server 8788",
     "check": "for f in functions/_lib/*.js functions/api/**/*.js assets/js/*.js; do node --check \"$f\" || exit 1; done"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "vitest": "^3.0.0",
     "wrangler": "^4.99.0"
   }

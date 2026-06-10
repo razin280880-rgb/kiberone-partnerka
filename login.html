@@ -65,8 +65,8 @@
     <div class="logo">KIBER<span>one</span> Partner</div>
     <h1>Вход в кабинет</h1>
 
-    <!-- Шаг 1: ввод slug -->
-    <form id="step-slug">
+    <!-- Шаг 1: ввод slug. novalidate — кастомная валидация в JS, иначе браузерный popup съедает submit. -->
+    <form id="step-slug" novalidate>
       <div class="step-text">
         Введите ваш slug партнёра — пришлю 6-значный код в Telegram.
       </div>
@@ -83,8 +83,8 @@
       <button type="submit" class="btn-primary" id="btn-request">Получить код</button>
     </form>
 
-    <!-- Шаг 2: ввод кода -->
-    <form id="step-code" class="hidden">
+    <!-- Шаг 2: ввод кода. Аналогично — кастомная валидация. -->
+    <form id="step-code" class="hidden" novalidate>
       <div class="step-text">
         Код отправлен в Telegram <strong id="tg-target">@Kiber_partner_bot</strong>. Введите 6 цифр.
       </div>

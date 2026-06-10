@@ -7,3 +7,8 @@ node_modules/
 Thumbs.db
 videos/*.mp4
 roadmaps/*.pdf
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
