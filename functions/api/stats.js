@@ -1,15 +1,10 @@
-// GET /api/stats?slug=demo_chln_01 — статистика партнёра для кабинета
-// GET /api/stats?type=live&city=chln — общий live-счётчик города для лендинга
+// GET /api/stats?type=live&city=chln — общий live-счётчик города для лендинга (публично).
+// GET /api/stats — статистика партнёра для кабинета (требует сессии). slug берётся из сессии.
 
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-  });
-}
+import { jsonResponse, readSession, nowSec } from '../_lib/auth.js';
 
 async function getLiveCount(env, city) {
-  if (!env.DB) return { todayCount: 47 + Math.floor(Math.random() * 20) };
+  if (!env.DB) return { todayCount: 47 + Math.floor((Date.now() % 20000) / 1000) };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const startTs = Math.floor(today.getTime() / 1000);
@@ -21,11 +16,8 @@ async function getLiveCount(env, city) {
 }
 
 async function getPartnerStats(env, slug) {
-  if (!env.DB) {
-    // Mock: пусть фронт сам подложит моки. Возвращаем минимум для смешивания.
-    return null;
-  }
-  const now = Math.floor(Date.now() / 1000);
+  if (!env.DB) return null;
+  const now = nowSec();
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
@@ -47,7 +39,16 @@ async function getPartnerStats(env, slug) {
    GROUP BY day ORDER BY day`
   ).bind(slug, now - 30 * 24 * 3600).all();
 
+  const partner = await env.DB.prepare(
+    `SELECT slug, name, city, tier, rate_anketa, requisites_json, mr_name, mr_telegram, mr_whatsapp
+       FROM partners WHERE slug = ?`
+  ).bind(slug).first();
+
   return {
+    partner: partner ? {
+      ...partner,
+      requisites: partner.requisites_json ? JSON.parse(partner.requisites_json) : null
+    } : null,
     stats: {
       monthAmount: leadsRow ? leadsRow.amount : 0,
       leadsCount: leadsRow ? leadsRow.leads_count : 0,
@@ -62,16 +63,22 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const type = url.searchParams.get('type');
 
+  // Публичный live-счётчик — без сессии.
   if (type === 'live') {
     const city = url.searchParams.get('city') || 'chln';
     const data = await getLiveCount(env, city);
     return jsonResponse(data);
   }
 
-  const slug = url.searchParams.get('slug');
-  if (!slug) return jsonResponse({ error: 'slug required' }, 400);
+  // Партнёрские метрики — только по сессии.
+  const session = await readSession(env, request);
+  if (!session) {
+    return jsonResponse({ error: 'unauthorized' }, { status: 401 });
+  }
 
-  const data = await getPartnerStats(env, slug);
-  if (!data) return jsonResponse({ error: 'D1 not configured — use mocks' }, 503);
+  const data = await getPartnerStats(env, session.partner_slug);
+  if (!data) {
+    return jsonResponse({ error: 'D1 not configured' }, { status: 503 });
+  }
   return jsonResponse(data);
 }

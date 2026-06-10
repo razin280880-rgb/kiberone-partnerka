@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Партнёрский кабинет KIBERone</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+
+  <style>
+    body { background: linear-gradient(135deg, #6B2FB5 0%, #1A1A2E 100%); min-height: 100vh; padding: 24px 16px; }
+    .auth-card {
+      max-width: 420px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .auth-card .logo { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--color-primary); margin-bottom: 4px; }
+    .auth-card .logo span { color: var(--color-dark); font-size: 0.9rem; }
+    h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; margin: 20px 0 8px; }
+    .step-text { color: var(--color-text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.5; }
+    .field { margin-bottom: 16px; }
+    .code-input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem !important;
+      letter-spacing: 0.4em;
+      text-align: center;
+      padding: 18px 12px !important;
+    }
+    .meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 14px; text-align: center; }
+    .err {
+      background: #FFE8EB;
+      color: #B8334A;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+    }
+    .hidden { display: none !important; }
+    .resend { margin-top: 14px; text-align: center; }
+    .resend a { font-size: 0.9rem; color: var(--color-primary); cursor: pointer; }
+    .tg-hint {
+      background: linear-gradient(135deg, #E8F4FF 0%, #D0E6FF 100%);
+      border-left: 4px solid #00C9FF;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+      color: var(--color-dark);
+    }
+    .tg-hint a { color: #006FB0; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="logo">KIBER<span>one</span> Partner</div>
+    <h1>Вход в кабинет</h1>
+
+    <!-- Шаг 1: ввод slug -->
+    <form id="step-slug">
+      <div class="step-text">
+        Введите ваш slug партнёра — пришлю 6-значный код в Telegram.
+      </div>
+      <div class="tg-hint">
+        Ещё не привязали Telegram? Откройте
+        <a href="https://t.me/Kiber_partner_bot" target="_blank">@Kiber_partner_bot</a>
+        и отправьте боту: <code>/start ваш_slug</code>
+      </div>
+      <div id="err-slug" class="err hidden"></div>
+      <div class="field">
+        <label for="slug-input">Slug партнёра</label>
+        <input type="text" id="slug-input" class="text-input" placeholder="например, stomat_chln_01" autocomplete="off" autocapitalize="off" required>
+      </div>
+      <button type="submit" class="btn-primary" id="btn-request">Получить код</button>
+    </form>
+
+    <!-- Шаг 2: ввод кода -->
+    <form id="step-code" class="hidden">
+      <div class="step-text">
+        Код отправлен в Telegram <strong id="tg-target">@Kiber_partner_bot</strong>. Введите 6 цифр.
+      </div>
+      <div id="err-code" class="err hidden"></div>
+      <div class="field">
+        <label for="code-input">Код из Telegram</label>
+        <input type="tel" id="code-input" class="text-input code-input" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="btn-primary" id="btn-verify">Войти</button>
+      <div class="resend">
+        <a id="link-resend">Не пришёл код — отправить заново</a>
+      </div>
+    </form>
+
+    <div class="meta">
+      Менеджер развития KIBERone подключит вас за 5 минут.<br>
+      Помощь: <a href="https://t.me/Kiber_partner_bot">@Kiber_partner_bot</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const $ = (s) => document.querySelector(s);
+
+      const state = {
+        slug: '',
+        tgUsername: null
+      };
+
+      function showError(target, msg) {
+        const el = $(target);
+        el.textContent = msg;
+        el.classList.remove('hidden');
+      }
+      function clearError(target) {
+        $(target).classList.add('hidden');
+      }
+
+      function lockBtn(btn, lockText) {
+        btn.dataset.original = btn.textContent;
+        btn.textContent = lockText;
+        btn.disabled = true;
+      }
+      function unlockBtn(btn) {
+        if (btn.dataset.original) btn.textContent = btn.dataset.original;
+        btn.disabled = false;
+      }
+
+      async function requestCode(slug) {
+        const r = await fetch('/api/auth/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partner_slug: slug })
+        });
+        const data = await r.json().catch(() => ({}));
+        return { ok: r.ok, status: r.status, data };
+      }
+
+      $('#step-slug').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError('#err-slug');
+        const slug = $('#slug-input').value.trim().toLowerCase();
+        if (!slug) {
+          showError('#err-slug', 'Введите slug партнёра');
+          return;
+        }
+        const btn = $('#btn-request');
+        lockBtn(btn, 'Отправляем...');
+
+        const { ok, status, data } = await requestCode(slug);
+        unlockBtn(btn);
+
+        if (!ok) {
+          if (status === 404) {
+            showError('#err-slug',
+              'Сначала привяжите Telegram: напишите боту @Kiber_partner_bot команду /start ' + slug);
+          } else if (status === 429) {
+            showError('#err-slug', data.message || 'Слишком частые запросы. Подождите.');
+          } else {
+            showError('#err-slug', data.message || 'Ошибка. Попробуйте ещё раз.');
+          }
+          return;
+        }
+
+        state.slug = slug;
+        state.tgUsername = data.telegram_username;
+        if (data.telegram_username) {
+          $('#tg-target').textContent = '@' + data.telegram_username;
+        }
+        $('#step-slug').classList.add('hidden');
+        $('#step-code').classList.remove('hidden');
+        $('#code-input').focus();
+      });
+
+      $('#code-input').addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+      });
+
+      $('#step-code').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError('#err-code');
+        const code = $('#code-input').value.replace(/\D/g, '');
+        if (code.length !== 6) {
+          showError('#err-code', 'Код состоит из 6 цифр');
+          return;
+        }
+        const btn = $('#btn-verify');
+        lockBtn(btn, 'Проверяем...');
+
+        const r = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partner_slug: state.slug, code })
+        });
+        const data = await r.json().catch(() => ({}));
+        unlockBtn(btn);
+
+        if (!r.ok) {
+          if (data.error === 'wrong_code') {
+            showError('#err-code',
+              `Неверный код. Попыток осталось: ${data.attemptsLeft}`);
+          } else if (data.error === 'expired' || data.error === 'no_active_code') {
+            showError('#err-code', 'Код истёк или не активен. Запросите новый.');
+          } else if (data.error === 'too_many_attempts') {
+            showError('#err-code', 'Слишком много попыток. Запросите новый код.');
+          } else {
+            showError('#err-code', 'Ошибка проверки. Попробуйте ещё раз.');
+          }
+          return;
+        }
+
+        // Успех — переходим в кабинет.
+        window.location.href = '/cabinet.html';
+      });
+
+      $('#link-resend').addEventListener('click', async () => {
+        clearError('#err-code');
+        if (!state.slug) return;
+        const { ok, data } = await requestCode(state.slug);
+        if (ok) {
+          showError('#err-code', '✅ Код отправлен заново. Проверьте Telegram.');
+          $('#err-code').style.background = '#E8F8F5';
+          $('#err-code').style.color = '#2EC4B6';
+        } else {
+          showError('#err-code', data.message || 'Не получилось отправить заново.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

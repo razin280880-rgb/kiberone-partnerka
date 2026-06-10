@@ -55,6 +55,17 @@
 .cab-user { text-align: right; }
 .cab-user-name { font-weight: 700; font-size: 0.95rem; }
 .cab-user-meta { font-size: 0.78rem; color: var(--color-text-muted); }
+.cab-logout {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.cab-logout:hover { color: var(--color-primary); }
 
 .cab-main {
   max-width: 1200px;

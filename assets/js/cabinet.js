@@ -6,8 +6,11 @@
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
 
+  // slug определяется на сервере по session cookie.
+  // Demo-режим возможен только если ?demo=1 в URL — UI помечает «демо-данные».
   const params = new URLSearchParams(window.location.search);
-  const slug = params.get('p') || 'demo_chln_01';
+  const DEMO = params.get('demo') === '1';
+  let slug = null;  // заполнится из /api/auth/me
 
   const state = { partner: null, leads: [], payouts: [] };
 
@@ -82,13 +85,43 @@
     }
   }
 
+  // ---------- Аутентификация ----------
+  async function checkAuth() {
+    if (DEMO) return { authenticated: true, partner_slug: 'demo_chln_01' };
+    try {
+      const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      const data = await r.json();
+      if (!data.authenticated) {
+        window.location.href = '/login.html';
+        return null;
+      }
+      return data;
+    } catch (e) {
+      window.location.href = '/login.html';
+      return null;
+    }
+  }
+
+  async function doLogout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch (e) { /* fallthrough */ }
+    window.location.href = '/login.html';
+  }
+
   // ---------- Загрузка данных ----------
   async function loadData() {
+    if (DEMO) return MOCK;
     try {
-      const r = await fetch(`/api/stats?slug=${slug}`);
+      const r = await fetch('/api/stats', { credentials: 'same-origin' });
+      if (r.status === 401) {
+        window.location.href = '/login.html';
+        return MOCK;
+      }
       if (r.ok) {
         const data = await r.json();
-        return { ...MOCK, ...data };
+        // Сливаем с моком: если в БД партнёр пустой/новый — UI всё равно рендерится.
+        return { ...MOCK, ...data, partner: { ...MOCK.partner, ...(data.partner || {}) } };
       }
     } catch (e) {
       console.warn('API недоступен, рендер моков', e);
@@ -249,7 +282,13 @@
 
   // ---------- Init ----------
   async function init() {
+    const auth = await checkAuth();
+    if (!auth) return;  // редирект на /login.html
+    slug = auth.partner_slug;
+
     initTabs();
+    initLogout();
+
     const data = await loadData();
     state.partner = data.partner;
     renderHeader(data);
@@ -271,6 +310,11 @@
         }
       });
     }
+  }
+
+  function initLogout() {
+    const btn = document.getElementById('btn-logout');
+    if (btn) btn.addEventListener('click', doLogout);
   }
 
   if (document.readyState === 'loading') {
