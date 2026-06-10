@@ -1,0 +1,16 @@
+{
+  "name": "kiberone-partnerka",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "wrangler pages dev .",
+    "check": "for f in functions/_lib/*.js functions/api/**/*.js assets/js/*.js; do node --check \"$f\" || exit 1; done"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "wrangler": "^4.99.0"
+  }
+}
