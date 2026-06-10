@@ -184,6 +184,7 @@ function buildSlots() {
 
 // Inline-импорт (Pages Functions поддерживают ESM в одной директории).
 import { getIP, rateLimit } from '../_lib/ratelimit.js';
+import { verifyTurnstile } from '../_lib/turnstile.js';
 
 const MIN_FORM_FILL_SECONDS = 5;
 
@@ -202,7 +203,12 @@ async function checkTiming(env, session_id) {
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { partner_slug, session_id, child_name, child_age, parent_whatsapp, website } = body;
+    const {
+      partner_slug, session_id,
+      child_name, child_age, parent_whatsapp,
+      website,
+      turnstile_token
+    } = body;
 
     // Honeypot — поле скрыто в CSS, заполняется только ботом.
     // Возвращаем 200, чтобы бот не догадался — но ничего не сохраняем.
@@ -215,6 +221,16 @@ export async function onRequestPost({ request, env }) {
 
     if (!partner_slug || !child_name || !child_age || !parent_whatsapp) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
+    }
+
+    // Turnstile (если включён в env).
+    const ts = await verifyTurnstile(env, turnstile_token, request);
+    if (!ts.ok) {
+      console.warn('turnstile failed', { partner_slug, errors: ts.errors });
+      return new Response(
+        JSON.stringify({ error: 'captcha_failed', errors: ts.errors }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     // Timing-check.

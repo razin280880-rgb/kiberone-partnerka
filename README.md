@@ -101,6 +101,10 @@ git push origin main
 | `WAZZUP_API_KEY` | Wazzup24 для WhatsApp-автоответа |
 | `WAZZUP_CHANNEL_ID` | Канал WhatsApp KIBERone в Wazzup |
 | `TELEGRAM_BOT_TOKEN` | Бот KIBERone-Partner для аутентификации и сводок |
+| `TELEGRAM_WEBHOOK_SECRET` | Секрет для верификации входящих апдейтов бота |
+| `CRON_SECRET` | Общий с GitHub Actions ключ для еженедельных сводок |
+| `TURNSTILE_SITE_KEY` | Публичный ключ Turnstile (отдаётся через `/api/config`) |
+| `TURNSTILE_SECRET_KEY` | Приватный ключ Turnstile для server-side verify |
 | `ELEVENLABS_API_KEY` | (опционально) персональное аудио по имени ребёнка |
 | `D1_DATABASE` | биндинг D1 в `wrangler.toml` |
 

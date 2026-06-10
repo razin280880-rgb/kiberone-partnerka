@@ -247,6 +247,10 @@
             <input type="text" id="f-website" name="website" tabindex="-1" autocomplete="off">
           </div>
 
+          <!-- Cloudflare Turnstile: рендерится только если /api/config вернул siteKey.
+               Размер compact (минимальный), тема light. -->
+          <div id="turnstile-host" class="turnstile-host"></div>
+
           <button type="submit" id="btn-submit" class="btn-primary btn-large">
             Получить план развития →
           </button>

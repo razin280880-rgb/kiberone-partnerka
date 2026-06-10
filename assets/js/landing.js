@@ -22,6 +22,12 @@
       whatsapp: ''
     },
     slot: null,
+    turnstile: {
+      siteKey: null,
+      token: null,
+      widgetId: null,
+      loaded: false
+    },
     currentScreen: 'screen-welcome'
   };
 
@@ -71,6 +77,45 @@
     state.partnerName = PARTNER_TYPES[parts[0]] || 'партнёру';
     state.partnerCity = parts[1] || 'chln';
   }
+
+  // ---------- Turnstile ----------
+  async function loadConfig() {
+    try {
+      const r = await fetch('/api/config');
+      if (!r.ok) return;
+      const data = await r.json();
+      state.turnstile.siteKey = data.turnstileSiteKey || null;
+    } catch (e) { /* offline-ok */ }
+  }
+
+  function loadTurnstileScript() {
+    if (state.turnstile.loaded || !state.turnstile.siteKey) return;
+    state.turnstile.loaded = true;
+    // Cloudflare Turnstile API.
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__kpTurnstileReady';
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  function renderTurnstile() {
+    if (!state.turnstile.siteKey || !window.turnstile) return;
+    const host = $('#turnstile-host');
+    if (!host || host.dataset.rendered) return;
+    host.dataset.rendered = '1';
+    state.turnstile.widgetId = window.turnstile.render(host, {
+      sitekey: state.turnstile.siteKey,
+      size: 'flexible',
+      theme: 'light',
+      callback: (token) => { state.turnstile.token = token; },
+      'expired-callback': () => { state.turnstile.token = null; },
+      'error-callback': () => { state.turnstile.token = null; }
+    });
+  }
+
+  // Глобальный callback для api.js?onload=...
+  window.__kpTurnstileReady = renderTurnstile;
 
   // ---------- Live counter ----------
   async function loadLiveCounter() {
@@ -129,6 +174,10 @@
       $('#f-hero-config').value = JSON.stringify(state.hero);
       showScreen('screen-form');
       startTimer();
+      // Подгружаем Turnstile только когда он реально нужен.
+      loadTurnstileScript();
+      // Если скрипт уже был загружен (повторный визит) — рендерим виджет сейчас.
+      if (window.turnstile) renderTurnstile();
     });
   }
 
@@ -174,6 +223,18 @@
       btn.disabled = true;
       btn.textContent = 'Отправляем...';
 
+      // Если Turnstile сконфигурен, но юзер не прошёл капчу — блокируем отправку.
+      if (state.turnstile.siteKey && !state.turnstile.token) {
+        btn.disabled = false;
+        btn.textContent = 'Получить план развития →';
+        const host = $('#turnstile-host');
+        if (host) {
+          host.style.outline = '2px solid var(--color-pink, #FF3DA8)';
+          setTimeout(() => { host.style.outline = ''; }, 1500);
+        }
+        return;
+      }
+
       const payload = {
         partner_slug: state.partnerSlug,
         session_id: state.sessionId,
@@ -182,7 +243,8 @@
         parent_whatsapp: $('#f-parent-whatsapp').value.replace(/\D/g, ''),
         hero_config: state.hero,
         // honeypot: при заполнении бот забыл его игнорировать → сервер дропнет.
-        website: $('#f-website') ? $('#f-website').value : ''
+        website: $('#f-website') ? $('#f-website').value : '',
+        turnstile_token: state.turnstile.token || null
       };
 
       state.parent = {
@@ -209,6 +271,11 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Получить план развития →';
+        // Turnstile-токен одноразовый. Если на форме остаёмся — нужен новый.
+        if (state.turnstile.widgetId && window.turnstile) {
+          try { window.turnstile.reset(state.turnstile.widgetId); } catch (e) {}
+        }
+        state.turnstile.token = null;
       }
     });
   }
@@ -326,10 +393,11 @@
   }
 
   // ---------- Init ----------
-  function init() {
+  async function init() {
     state.sessionId = genSessionId();
     parseUtm();
-    loadLiveCounter();
+    // Параллельно: live-счётчик и публичный конфиг (siteKey Turnstile).
+    Promise.all([loadLiveCounter(), loadConfig()]);
     sendScanEvent();
     initWelcome();
     initResult();

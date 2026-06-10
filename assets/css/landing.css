@@ -337,6 +337,14 @@
   overflow: hidden;
 }
 
+.turnstile-host {
+  margin: 16px 0 4px;
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+.turnstile-host:empty { margin: 0; }
+
 /* === Screen 5: Reward === */
 
 .reward-inner {
