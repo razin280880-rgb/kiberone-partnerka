@@ -1,0 +1,17 @@
+name = "kiberone-realtime"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom route — выдаётся отдельным поддоменом, чтобы клиент мог открыть wss://
+# напрямую (без проксирования через Pages). DNS: realtime-partner.it-kiber.ru
+# нужно вручную добавить в Cloudflare → DNS как Worker route после первого деплоя.
+# routes = [{ pattern = "realtime-partner.it-kiber.ru/*", custom_domain = true }]
+
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "RealtimeHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RealtimeHub"]

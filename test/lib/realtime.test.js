@@ -1,12 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { emitEvent, emitToMany } from '../../functions/_lib/realtime.js';
 import { makeFakeDb } from '../helpers/fake-db.js';
+import { makeFakeFetch } from '../helpers/fake-fetch.js';
 
 describe('emitEvent', () => {
-  let env;
+  let env, fakeFetch;
 
   beforeEach(() => {
     env = { DB: makeFakeDb() };
+    fakeFetch = makeFakeFetch().route('/', { body: { ok: true } });
+    fakeFetch.install();
   });
 
   it('записывает событие в realtime_events', async () => {
@@ -38,5 +41,28 @@ describe('emitEvent', () => {
     });
     await emitToMany(env, ['owner', null, '', undefined], 'x', {});
     expect(audiencesCalled).toEqual(['owner']);
+  });
+
+  it('пушит в worker, если REALTIME_BROADCAST_URL + SHARED_SECRET заданы', async () => {
+    env.REALTIME_BROADCAST_URL = 'https://realtime.test/broadcast';
+    env.REALTIME_SHARED_SECRET = 'secret';
+    env.DB.on('INSERT INTO realtime_events', { run: () => ({}) });
+
+    await emitEvent(env, 'partner:a', 'new_lead', { lead_id: 1 });
+
+    const workerCall = fakeFetch.calls.find(c => c.url.includes('broadcast'));
+    expect(workerCall).toBeTruthy();
+    expect(workerCall.init.headers['X-Internal-Secret']).toBe('secret');
+    const body = JSON.parse(workerCall.init.body);
+    expect(body.audience).toBe('partner:a');
+    expect(body.event.type).toBe('new_lead');
+    expect(body.event.payload.lead_id).toBe(1);
+  });
+
+  it('НЕ пушит в worker, если REALTIME_BROADCAST_URL не задан', async () => {
+    env.DB.on('INSERT INTO realtime_events', { run: () => ({}) });
+    await emitEvent(env, 'partner:a', 'new_lead', { lead_id: 1 });
+    const workerCall = fakeFetch.calls.find(c => c.url.includes('broadcast'));
+    expect(workerCall).toBeUndefined();
   });
 });

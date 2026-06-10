@@ -105,8 +105,21 @@ git push origin main
 | `CRON_SECRET` | Общий с GitHub Actions ключ для еженедельных сводок |
 | `TURNSTILE_SITE_KEY` | Публичный ключ Turnstile (отдаётся через `/api/config`) |
 | `TURNSTILE_SECRET_KEY` | Приватный ключ Turnstile для server-side verify |
+| `OWNER_TELEGRAM_IDS` | CSV Telegram ID собственников для админ-доступа (например `400383551`) |
+| `REALTIME_SHARED_SECRET` | Общий секрет с realtime-worker для HMAC-токенов и broadcast |
+| `REALTIME_WS_URL` | `wss://realtime-partner.it-kiber.ru/ws` — URL, который клиент откроет |
+| `REALTIME_BROADCAST_URL` | `https://realtime-partner.it-kiber.ru/broadcast` — куда Pages эмитит |
 | `ELEVENLABS_API_KEY` | (опционально) персональное аудио по имени ребёнка |
 | `D1_DATABASE` | биндинг D1 в `wrangler.toml` |
+
+### Realtime (WebSocket)
+
+Реализован в отдельном Worker'е в [realtime-worker/](realtime-worker/) — нативная поддержка
+Durable Objects в Pages Functions ограничена, проще держать DO в отдельном проекте и общаться
+через подписанные HMAC-токены + защищённый `/broadcast`.
+
+Архитектура: клиент сначала запрашивает токен у Pages, открывает `wss://`, при разрыве
+автоматически переходит на polling. Подробнее — в [realtime-worker/README.md](realtime-worker/README.md).
 
 ### D1 schema
 
