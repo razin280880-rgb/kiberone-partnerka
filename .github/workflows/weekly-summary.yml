@@ -1,0 +1,32 @@
+name: Weekly summary to partners
+
+# ПН 10:00 МСК = 07:00 UTC.
+# Также можно запускать вручную в Actions → Run workflow.
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  send-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly-summary endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "X-Cron-Secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            https://partner.it-kiber.ru/api/cron/weekly-summary)
+
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+
+          echo "Status: $status"
+          echo "Body: $body"
+
+          if [ "$status" -ne 200 ]; then
+            echo "::error::Weekly summary failed with status $status"
+            exit 1
+          fi

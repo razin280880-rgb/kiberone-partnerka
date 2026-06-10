@@ -113,16 +113,30 @@
   async function loadData() {
     if (DEMO) return MOCK;
     try {
-      const r = await fetch('/api/stats', { credentials: 'same-origin' });
-      if (r.status === 401) {
+      const [statsR, leadsR] = await Promise.all([
+        fetch('/api/stats', { credentials: 'same-origin' }),
+        fetch('/api/leads/list?period=month', { credentials: 'same-origin' })
+      ]);
+      if (statsR.status === 401) {
         window.location.href = '/login.html';
         return MOCK;
       }
-      if (r.ok) {
-        const data = await r.json();
-        // Сливаем с моком: если в БД партнёр пустой/новый — UI всё равно рендерится.
-        return { ...MOCK, ...data, partner: { ...MOCK.partner, ...(data.partner || {}) } };
+      let merged = { ...MOCK };
+      if (statsR.ok) {
+        const data = await statsR.json();
+        merged = {
+          ...merged,
+          ...data,
+          partner: { ...MOCK.partner, ...(data.partner || {}) }
+        };
       }
+      if (leadsR.ok) {
+        const data = await leadsR.json();
+        if (Array.isArray(data.leads) && data.leads.length) {
+          merged.leads = data.leads;
+        }
+      }
+      return merged;
     } catch (e) {
       console.warn('API недоступен, рендер моков', e);
     }
@@ -223,15 +237,64 @@
       return;
     }
     tbody.innerHTML = data.leads.map(l => `
-      <tr>
+      <tr data-lead-id="${l.id || ''}">
         <td>${l.date}</td>
         <td>${l.age} лет</td>
         <td>${statusPill(l.status)}</td>
         <td><strong>${l.amount == null ? '—' : fmtRub(l.amount)}</strong></td>
         <td><span class="hint">${l.comment || ''}</span></td>
-        <td>${l.status === 'rejected' ? '<button class="btn-secondary" data-action="dispute">Оспорить</button>' : ''}</td>
+        <td>${
+          l.disputed
+            ? '<span class="status-pill status-pending">⚖️ На рассмотрении</span>'
+            : (l.status === 'rejected' || l.amount === 0
+                ? `<button class="btn-secondary" data-action="dispute" data-lead-id="${l.id || ''}">Оспорить</button>`
+                : '')
+        }</td>
       </tr>
     `).join('');
+
+    tbody.addEventListener('click', onLeadsClick, { once: true });
+  }
+
+  async function onLeadsClick(e) {
+    const btn = e.target.closest('[data-action="dispute"]');
+    if (!btn) {
+      // переподписка для следующих кликов
+      $('#leads-tbody').addEventListener('click', onLeadsClick, { once: true });
+      return;
+    }
+    const leadId = parseInt(btn.dataset.leadId, 10);
+    if (!leadId) return;
+
+    const reason = window.prompt(
+      'Опишите причину оспаривания (5–500 символов).\n' +
+      'Например: «Этот ребёнок уже занимается у вас», «Анкету заполнил мой сотрудник», и т.п.'
+    );
+    if (!reason || reason.trim().length < 5) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Отправляем...';
+    try {
+      const r = await fetch('/api/leads/dispute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ lead_id: leadId, reason: reason.trim() })
+      });
+      const data = await r.json();
+      if (r.ok) {
+        btn.outerHTML = '<span class="status-pill status-pending">⚖️ На рассмотрении</span>';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Оспорить';
+        alert(data.message || data.error || 'Не получилось отправить.');
+      }
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Оспорить';
+      alert('Сеть недоступна. Попробуйте ещё раз.');
+    }
+    $('#leads-tbody').addEventListener('click', onLeadsClick, { once: true });
   }
 
   function renderPayouts(data) {

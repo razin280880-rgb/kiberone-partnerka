@@ -90,6 +90,44 @@ async function sendToAlfaCRM(env, lead, tutorCity, cityKey) {
   }
 }
 
+// Уведомление партнёра в Telegram о новом лиде.
+// PII не светим: только возраст ребёнка и факт анкеты (не имя, не телефон).
+// Это даёт партнёру обратную связь «куб работает» без риска утечки.
+async function notifyPartnerInTelegram(env, partner_slug, lead) {
+  if (!env.DB || !env.TELEGRAM_BOT_TOKEN) return;
+  try {
+    const binding = await env.DB.prepare(
+      `SELECT b.telegram_user_id, p.name, p.rate_anketa
+         FROM telegram_bindings b
+         JOIN partners p ON p.slug = b.partner_slug
+        WHERE b.partner_slug = ?`
+    ).bind(partner_slug).first();
+    if (!binding || !binding.telegram_user_id) return;
+
+    const rate = binding.rate_anketa || 200;
+    const text =
+      `🆕 <b>Новая анкета у вас!</b>\n\n` +
+      `Возраст ребёнка: <b>${lead.child_age} лет</b>\n` +
+      `Город: ${lead.city}\n\n` +
+      `После прозвона менеджером будет начислено: <b>${rate} ₽</b>\n` +
+      `Дополнительно: +500 ₽ за приход на пробный, +2000 ₽ за оплату годового.\n\n` +
+      `Подробнее → https://partner.it-kiber.ru/cabinet.html`;
+
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: binding.telegram_user_id,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      })
+    });
+  } catch (e) {
+    console.error('notifyPartner error', e);
+  }
+}
+
 async function sendWhatsApp(env, lead, tutorCity) {
   if (!env.WAZZUP_API_KEY || !env.WAZZUP_CHANNEL_ID) return null;
   const text =
@@ -160,6 +198,7 @@ export async function onRequestPost({ request, env }) {
     const localId = await saveToD1(env, lead);
     const alphaId = await sendToAlfaCRM(env, lead, tutor, cityKey);
     await sendWhatsApp(env, lead, tutor);
+    await notifyPartnerInTelegram(env, partner_slug, lead);
 
     // Возвращаем награду
     return new Response(JSON.stringify({
