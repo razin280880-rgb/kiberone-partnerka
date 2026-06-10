@@ -7,8 +7,12 @@ import { makeFakeFetch } from '../../helpers/fake-fetch.js';
 const SESSION_COOKIE = 'kp_session=VALID_TOKEN';
 
 function bindSession(env, partnerSlug) {
-  env.DB.on('SELECT partner_slug, expires_at FROM sessions WHERE token', {
-    first: () => ({ partner_slug: partnerSlug, expires_at: Math.floor(Date.now() / 1000) + 3600 })
+  env.DB.on('SELECT partner_slug, expires_at, role FROM sessions', {
+    first: () => ({
+      partner_slug: partnerSlug,
+      role: 'partner',
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    })
   });
   env.DB.on('SELECT last_seen_at FROM sessions WHERE token', {
     first: () => ({ last_seen_at: Math.floor(Date.now() / 1000) - 100 })

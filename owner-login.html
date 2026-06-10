@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Админ-кабинет KIBERone</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+
+  <style>
+    body { background: linear-gradient(135deg, #1A1A2E 0%, #6B2FB5 100%); min-height: 100vh; padding: 24px 16px; }
+    .auth-card {
+      max-width: 420px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .auth-card .logo { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--color-primary); margin-bottom: 4px; }
+    .auth-card .logo span { color: var(--color-dark); font-size: 0.9rem; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #1A1A2E;
+      color: #FFD43B;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-top: 6px;
+    }
+    h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; margin: 20px 0 8px; }
+    .step-text { color: var(--color-text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.5; }
+    .field { margin-bottom: 16px; }
+    .code-input {
+      font-family: monospace;
+      font-size: 2rem !important;
+      letter-spacing: 0.4em;
+      text-align: center;
+      padding: 18px 12px !important;
+    }
+    .meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 14px; text-align: center; }
+    .err { background: #FFE8EB; color: #B8334A; padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 14px; }
+    .hidden { display: none !important; }
+    .resend { margin-top: 14px; text-align: center; }
+    .resend a { font-size: 0.9rem; color: var(--color-primary); cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="logo">KIBER<span>one</span> Admin</div>
+    <span class="badge">владелец</span>
+    <h1>Вход в админ-кабинет</h1>
+
+    <form id="step-id" novalidate>
+      <div class="step-text">
+        Введите ваш Telegram ID — пришлю код в Telegram через @Kiber_partner_bot.
+      </div>
+      <div id="err-id" class="err hidden"></div>
+      <div class="field">
+        <label for="id-input">Telegram ID</label>
+        <input type="tel" id="id-input" class="text-input" placeholder="400383551" inputmode="numeric" autocomplete="off" required>
+      </div>
+      <button type="submit" class="btn-primary" id="btn-request">Получить код</button>
+    </form>
+
+    <form id="step-code" class="hidden" novalidate>
+      <div class="step-text">
+        Код отправлен. Введите 6 цифр.
+      </div>
+      <div id="err-code" class="err hidden"></div>
+      <div class="field">
+        <label for="code-input">Код из Telegram</label>
+        <input type="tel" id="code-input" class="text-input code-input" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="btn-primary" id="btn-verify">Войти</button>
+      <div class="resend">
+        <a id="link-resend">Не пришёл код — отправить заново</a>
+      </div>
+    </form>
+
+    <div class="meta">
+      Доступ только для whitelist (env <code>OWNER_TELEGRAM_IDS</code>).
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s) => document.querySelector(s);
+      const state = { telegram_id: null };
+
+      function showError(target, msg) { const el = $(target); el.textContent = msg; el.classList.remove('hidden'); }
+      function clearError(target) { $(target).classList.add('hidden'); }
+      function lockBtn(btn, t) { btn.dataset.original = btn.textContent; btn.textContent = t; btn.disabled = true; }
+      function unlockBtn(btn) { if (btn.dataset.original) btn.textContent = btn.dataset.original; btn.disabled = false; }
+
+      async function requestCode(id) {
+        const r = await fetch('/api/auth/owner/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_id: parseInt(id, 10) })
+        });
+        const data = await r.json().catch(() => ({}));
+        return { ok: r.ok, status: r.status, data };
+      }
+
+      $('#step-id').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError('#err-id');
+        const id = $('#id-input').value.replace(/\D/g, '');
+        if (!id) { showError('#err-id', 'Введите Telegram ID'); return; }
+        const btn = $('#btn-request');
+        lockBtn(btn, 'Отправляем...');
+        const { ok, status, data } = await requestCode(id);
+        unlockBtn(btn);
+        if (!ok) {
+          if (status === 403) showError('#err-id', 'Доступ запрещён.');
+          else if (status === 429) showError('#err-id', 'Слишком частые запросы.');
+          else showError('#err-id', data.message || 'Ошибка.');
+          return;
+        }
+        state.telegram_id = id;
+        $('#step-id').classList.add('hidden');
+        $('#step-code').classList.remove('hidden');
+        $('#code-input').focus();
+      });
+
+      $('#code-input').addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+      });
+
+      $('#step-code').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError('#err-code');
+        const code = $('#code-input').value.replace(/\D/g, '');
+        if (code.length !== 6) { showError('#err-code', 'Код состоит из 6 цифр'); return; }
+        const btn = $('#btn-verify');
+        lockBtn(btn, 'Проверяем...');
+        const r = await fetch('/api/auth/owner/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_id: parseInt(state.telegram_id, 10), code })
+        });
+        const data = await r.json().catch(() => ({}));
+        unlockBtn(btn);
+        if (!r.ok) {
+          if (data.error === 'wrong_code') showError('#err-code', `Неверный код. Попыток осталось: ${data.attemptsLeft}`);
+          else if (data.error === 'expired' || data.error === 'no_active_code') showError('#err-code', 'Код истёк.');
+          else if (data.error === 'too_many_attempts') showError('#err-code', 'Слишком много попыток.');
+          else showError('#err-code', 'Ошибка.');
+          return;
+        }
+        window.location.href = '/owner.html';
+      });
+
+      $('#link-resend').addEventListener('click', async () => {
+        if (!state.telegram_id) return;
+        clearError('#err-code');
+        const { ok } = await requestCode(state.telegram_id);
+        showError('#err-code', ok ? '✅ Код отправлен заново.' : '❌ Не получилось.');
+        if (ok) { $('#err-code').style.background = '#E8F8F5'; $('#err-code').style.color = '#2EC4B6'; }
+      });
+    })();
+  </script>
+</body>
+</html>

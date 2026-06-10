@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-дашборд — KIBERone Partner</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/cabinet.css">
+  <link rel="stylesheet" href="/assets/css/owner.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body class="cabinet-body">
+
+  <header class="cab-header owner-header">
+    <div class="cab-header-inner">
+      <div class="logo">KIBER<span>one</span> Admin <span class="admin-badge">владелец</span></div>
+      <nav class="cab-tabs">
+        <button class="cab-tab active" data-tab="overview">Обзор</button>
+        <button class="cab-tab" data-tab="cities">Города</button>
+        <button class="cab-tab" data-tab="partners">Партнёры</button>
+        <button class="cab-tab" data-tab="disputes">Диспуты <span id="disputes-badge" class="badge-count">0</span></button>
+        <button class="cab-tab" data-tab="mrs">МР</button>
+      </nav>
+      <div class="cab-user">
+        <select id="period-select">
+          <option value="week">Неделя</option>
+          <option value="month">Месяц</option>
+          <option value="all">Всё время</option>
+        </select>
+        <button id="btn-logout" class="cab-logout" type="button">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="cab-main">
+
+    <section class="cab-pane active" data-pane="overview">
+      <div class="cab-stats-grid stats-grid-6">
+        <div class="stat-card stat-primary">
+          <div class="stat-label">Партнёрам начислено</div>
+          <div class="stat-value" id="ov-amount">— ₽</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Активных партнёров</div>
+          <div class="stat-value" id="ov-partners">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Сканов QR</div>
+          <div class="stat-value" id="ov-scans">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Анкет</div>
+          <div class="stat-value" id="ov-leads">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Пробных</div>
+          <div class="stat-value" id="ov-trials">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Оплат</div>
+          <div class="stat-value" id="ov-paid">—</div>
+        </div>
+      </div>
+
+      <div class="cab-row two">
+        <div class="cab-card">
+          <h3>Воронка по сети</h3>
+          <div class="funnel" id="ov-funnel"></div>
+        </div>
+        <div class="cab-card">
+          <h3>Динамика 12 недель</h3>
+          <div class="chart chart-tall" id="ov-chart"></div>
+        </div>
+      </div>
+
+      <div class="cab-row two">
+        <div class="cab-card">
+          <h3>🔥 Топ-5 партнёров</h3>
+          <div class="top-list" id="ov-top"></div>
+        </div>
+        <div class="cab-card">
+          <h3>🚨 Просадка (≥7 дней без анкет)</h3>
+          <div class="top-list" id="ov-bottom"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cab-pane" data-pane="cities">
+      <div class="cab-card">
+        <h3>Воронка по 7 городам</h3>
+        <table class="cab-table">
+          <thead>
+            <tr>
+              <th>Город</th>
+              <th>Партнёров</th>
+              <th>Сканы</th>
+              <th>Анкеты</th>
+              <th>Пробные</th>
+              <th>Оплаты</th>
+              <th>Конверсия в опл.</th>
+              <th>Начислено</th>
+            </tr>
+          </thead>
+          <tbody id="cities-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cab-pane" data-pane="partners">
+      <div class="cab-card">
+        <h3>Топ-20 партнёров за период</h3>
+        <table class="cab-table">
+          <thead>
+            <tr><th>Партнёр</th><th>Город</th><th>Анкет</th><th>Оплат</th></tr>
+          </thead>
+          <tbody id="partners-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cab-pane" data-pane="disputes">
+      <div class="cab-card">
+        <h3>Активные диспуты</h3>
+        <table class="cab-table">
+          <thead>
+            <tr>
+              <th>Лид</th><th>Партнёр</th><th>Город</th><th>Причина</th><th>Статус</th><th>Решить</th>
+            </tr>
+          </thead>
+          <tbody id="disputes-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cab-pane" data-pane="mrs">
+      <div class="cab-card">
+        <h3>Performance менеджеров развития</h3>
+        <table class="cab-table">
+          <thead>
+            <tr><th>МР</th><th>Партнёров</th><th>Анкеты</th><th>Оплаты</th></tr>
+          </thead>
+          <tbody id="mrs-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/assets/js/owner.js" defer></script>
+</body>
+</html>
