@@ -343,6 +343,43 @@
     $('#mr-wa').href = mr.wa;
   }
 
+  // ---------- Realtime подписки ----------
+  function initRealtime() {
+    if (!window.Realtime || DEMO) return;
+    window.Realtime.on('new_lead', (ev) => {
+      window.Realtime.showToast(
+        `🆕 Новая анкета! Возраст ${ev.payload?.child_age ?? '—'} лет`,
+        'success'
+      );
+      reloadDataSilently();
+    });
+    window.Realtime.on('status_changed', (ev) => {
+      const map = {
+        qualified: '✅ Анкета квалифицирована',
+        trial_came: '🎯 Лид пришёл на пробный — +500 ₽',
+        paid: '💰 Лид оплатил годовой — +2 000 ₽!',
+        rejected: '⚠️ Анкета отклонена'
+      };
+      window.Realtime.showToast(map[ev.payload?.to] || 'Статус обновлён', 'success');
+      reloadDataSilently();
+    });
+    window.Realtime.on('dispute_resolved', (ev) => {
+      const text = ev.payload?.action === 'accept'
+        ? '✅ Ваш спор принят'
+        : '❌ Ваш спор отклонён';
+      window.Realtime.showToast(text, ev.payload?.action === 'accept' ? 'warning' : 'info');
+      reloadDataSilently();
+    });
+    window.Realtime.start();
+  }
+
+  async function reloadDataSilently() {
+    const data = await loadData();
+    if (!data || !data.partner) return;
+    renderDashboard(data);
+    renderLeads(data);
+  }
+
   // ---------- Init ----------
   async function init() {
     const auth = await checkAuth();
@@ -351,6 +388,7 @@
 
     initTabs();
     initLogout();
+    initRealtime();
 
     const data = await loadData();
     state.partner = data.partner;

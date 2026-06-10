@@ -5,6 +5,7 @@
 // дополнительные суммы (trial → +500, paid → +2000). При rejected — обнуляются.
 
 import { jsonResponse, readSession, nowSec, logAdminAction } from '../../../_lib/auth.js';
+import { emitEvent } from '../../../_lib/realtime.js';
 
 const ALLOWED = ['qualified', 'trial_booked', 'trial_came', 'paid', 'rejected'];
 
@@ -107,6 +108,13 @@ export async function onRequestPost({ request, env }) {
     from: lead.status, to: status, note
   });
   await notifyPartner(env, lead, status);
+
+  // Realtime: партнёр получает событие — кабинет переотрисовывает анкеты,
+  // owner-дашборд обновляет KPI.
+  await emitEvent(env, `partner:${lead.partner_slug}`, 'status_changed', {
+    lead_id, from: lead.status, to: status
+  });
+  await emitEvent(env, 'owner', 'status_changed', { lead_id, to: status });
 
   return jsonResponse({ ok: true, lead_id, status });
 }

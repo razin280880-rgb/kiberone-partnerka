@@ -185,6 +185,7 @@ function buildSlots() {
 // Inline-импорт (Pages Functions поддерживают ESM в одной директории).
 import { getIP, rateLimit } from '../_lib/ratelimit.js';
 import { verifyTurnstile } from '../_lib/turnstile.js';
+import { emitToMany } from '../_lib/realtime.js';
 
 const MIN_FORM_FILL_SECONDS = 5;
 
@@ -264,6 +265,15 @@ export async function onRequestPost({ request, env }) {
     const alphaId = await sendToAlfaCRM(env, lead, tutor, cityKey);
     await sendWhatsApp(env, lead, tutor);
     await notifyPartnerInTelegram(env, partner_slug, lead);
+
+    // Realtime: партнёр сразу видит new_lead в кабинете (без F5).
+    // Owner получает событие для счётчика на дашборде.
+    await emitToMany(env, [`partner:${partner_slug}`, 'owner'], 'new_lead', {
+      lead_id: localId,
+      partner_slug,
+      child_age: lead.child_age,
+      city: tutor.city
+    });
 
     // Возвращаем награду
     return new Response(JSON.stringify({

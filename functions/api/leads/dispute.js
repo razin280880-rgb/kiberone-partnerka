@@ -6,6 +6,7 @@
 // Финальное решение принимает РОП.
 
 import { jsonResponse, readSession, nowSec } from '../../_lib/auth.js';
+import { emitEvent } from '../../_lib/realtime.js';
 
 export async function onRequestPost({ request, env }) {
   const session = await readSession(env, request);
@@ -65,6 +66,11 @@ export async function onRequestPost({ request, env }) {
       });
     } catch (e) { console.error('mr notify error', e); }
   }
+
+  // Realtime: owner видит новый dispute мгновенно (badge на табе диспутов).
+  await emitEvent(env, 'owner', 'dispute_opened', {
+    lead_id, partner_slug: session.partner_slug, reason
+  });
 
   return jsonResponse({ ok: true });
 }

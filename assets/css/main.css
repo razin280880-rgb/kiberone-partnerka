@@ -152,3 +152,44 @@ label {
   h1 { font-size: 1.8rem; }
   h2 { font-size: 1.4rem; }
 }
+
+/* === Realtime toast === */
+.rt-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 360px;
+}
+
+.rt-toast {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-left: 4px solid var(--color-primary);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.rt-toast-show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.rt-toast-success { border-left-color: var(--color-green, #2EC4B6); }
+.rt-toast-warning { border-left-color: var(--color-accent); }
+.rt-toast-danger { border-left-color: #FF3DA8; }
+.rt-toast-info { border-left-color: var(--color-primary); }
+
+@media (max-width: 480px) {
+  .rt-toast-container { top: 12px; right: 12px; left: 12px; max-width: none; }
+}

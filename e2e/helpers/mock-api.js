@@ -96,7 +96,18 @@ export async function setupApi(page, overrides = {}) {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ leads: [] })
-      })
+      }),
+
+    // Realtime — по умолчанию пустой ответ. Тесты, которые проверяют push,
+    // переопределяют этот route.
+    '/api/realtime/events': (route) => {
+      const ts = Math.floor(Date.now() / 1000);
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ events: [], serverTs: ts, nextSince: ts })
+      });
+    }
   };
 
   const merged = { ...handlers, ...overrides };

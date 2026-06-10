@@ -265,6 +265,37 @@
     }
   }
 
+  function initRealtime() {
+    if (!window.Realtime) return;
+    window.Realtime.on('new_lead', () => {
+      window.Realtime.showToast('🆕 Новая анкета в сети', 'success');
+      reloadOverviewSilently();
+    });
+    window.Realtime.on('dispute_opened', (ev) => {
+      window.Realtime.showToast(
+        `⚖️ Новый диспут от партнёра (лид #${ev.payload?.lead_id})`,
+        'warning',
+        8000
+      );
+      reloadOverviewSilently();
+      // Если на табе диспутов — мгновенно обновим ленту.
+      const active = document.querySelector('.cab-tab.active');
+      if (active && active.dataset.tab === 'disputes') loadDisputes();
+    });
+    window.Realtime.on('dispute_resolved', () => {
+      reloadOverviewSilently();
+    });
+    window.Realtime.on('status_changed', () => {
+      reloadOverviewSilently();
+    });
+    window.Realtime.start();
+  }
+
+  async function reloadOverviewSilently() {
+    const d = await loadOverview();
+    if (d) renderOverview(d);
+  }
+
   // ---------- Init ----------
   async function init() {
     if (!(await checkAuth())) return;
@@ -277,6 +308,7 @@
     });
     const d = await loadOverview();
     if (d) renderOverview(d);
+    initRealtime();
   }
 
   if (document.readyState === 'loading') {

@@ -9,6 +9,7 @@
 // В обоих случаях: log в admin_log, Telegram-уведомление партнёру.
 
 import { jsonResponse, readSession, nowSec, logAdminAction } from '../../../_lib/auth.js';
+import { emitEvent } from '../../../_lib/realtime.js';
 
 async function notifyPartner(env, lead, action, note) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.DB) return;
@@ -87,6 +88,12 @@ export async function onRequestPost({ request, env }) {
   await logAdminAction(env, 0, `dispute_${action}`, 'lead', lead_id, { note });
 
   await notifyPartner(env, lead, action, note);
+
+  // Realtime: партнёр видит исход спора, owner — снимает строку из ленты.
+  await emitEvent(env, `partner:${lead.partner_slug}`, 'dispute_resolved', {
+    lead_id, action, note
+  });
+  await emitEvent(env, 'owner', 'dispute_resolved', { lead_id, action });
 
   return jsonResponse({ ok: true, action, lead_id });
 }
