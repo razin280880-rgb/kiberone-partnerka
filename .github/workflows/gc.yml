@@ -1,0 +1,31 @@
+name: Daily GC
+
+# Ежедневно 03:00 UTC = 06:00 МСК. Низкая нагрузка ночью.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  gc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger gc endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "X-Cron-Secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            https://partner.it-kiber.ru/api/cron/gc)
+
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+
+          echo "Status: $status"
+          echo "Body: $body"
+
+          if [ "$status" -ne 200 ]; then
+            echo "::error::GC failed with status $status"
+            exit 1
+          fi
