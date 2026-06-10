@@ -47,13 +47,28 @@ async function saveToD1(env, lead) {
   return res.meta.last_row_id;
 }
 
-async function sendToAlphaCRM(env, lead, tutorCity) {
-  if (!env.ALPHACRM_API_KEY) return null;
+// Краснодар сидит в отдельной инсталляции AlphaCRM, для остальных 6 городов — основной аккаунт.
+function pickAlfaCreds(env, cityKey) {
+  if (cityKey === 'krd' && env.KRASNODAR_API_KEY) {
+    return {
+      apiKey: env.KRASNODAR_API_KEY,
+      hostname: env.KRASNODAR_HOSTNAME || 'kiberonekrasnodar.s20.online'
+    };
+  }
+  return {
+    apiKey: env.ALFACRM_API_KEY,
+    hostname: env.ALFACRM_HOSTNAME || 'kiberonenabchln.s20.online'
+  };
+}
+
+async function sendToAlfaCRM(env, lead, tutorCity, cityKey) {
+  const { apiKey, hostname } = pickAlfaCreds(env, cityKey);
+  if (!apiKey) return null;
   try {
-    const r = await fetch(`https://${env.ALPHACRM_HOSTNAME || 'kiberonenabchln.s20.online'}/v2api/_/lead/`, {
+    const r = await fetch(`https://${hostname}/v2api/_/lead/`, {
       method: 'POST',
       headers: {
-        'X-API-KEY': env.ALPHACRM_API_KEY,
+        'X-API-KEY': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -70,7 +85,7 @@ async function sendToAlphaCRM(env, lead, tutorCity) {
     const data = await r.json();
     return data.id;
   } catch (e) {
-    console.error('AlphaCRM error', e);
+    console.error('AlfaCRM error', e);
     return null;
   }
 }
@@ -143,14 +158,14 @@ export async function onRequestPost({ request, env }) {
     };
 
     const localId = await saveToD1(env, lead);
-    const alphaId = await sendToAlphaCRM(env, lead, tutor);
+    const alphaId = await sendToAlfaCRM(env, lead, tutor, cityKey);
     await sendWhatsApp(env, lead, tutor);
 
     // Возвращаем награду
     return new Response(JSON.stringify({
       ok: true,
       leadId: localId,
-      alphaLeadId: alphaId,
+      alfaLeadId: alphaId,
       roadmapUrl: `/roadmaps/${ageGroup}.html`,
       videoUrl: `/videos/${cityKey}-${ageGroup}.mp4`,
       tutor: { name: tutor.name, city: tutor.cityLocative },

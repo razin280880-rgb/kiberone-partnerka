@@ -94,8 +94,10 @@ git push origin main
 
 | Переменная | Назначение |
 |---|---|
-| `ALPHACRM_API_KEY` | API-ключ AlphaCRM для записи лидов |
-| `ALPHACRM_HOSTNAME` | `kiberonenabchln.s20.online` |
+| `ALFACRM_API_KEY` | API-ключ основной инсталляции AlphaCRM (6 городов кроме Краснодара) |
+| `ALFACRM_HOSTNAME` | `kiberonenabchln.s20.online` |
+| `KRASNODAR_API_KEY` | API-ключ отдельной инсталляции AlphaCRM для Краснодара |
+| `KRASNODAR_HOSTNAME` | `kiberonekrasnodar.s20.online` |
 | `WAZZUP_API_KEY` | Wazzup24 для WhatsApp-автоответа |
 | `WAZZUP_CHANNEL_ID` | Канал WhatsApp KIBERone в Wazzup |
 | `TELEGRAM_BOT_TOKEN` | Бот KIBERone-Partner для аутентификации и сводок |
