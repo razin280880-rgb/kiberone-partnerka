@@ -240,14 +240,20 @@
     heroTarget.appendChild(heroClone);
 
     // PDF и видео ссылки
-    $('#reward-pdf-link').href = data.roadmapUrl || `/roadmaps/${ageGroup}.pdf`;
+    $('#reward-pdf-link').href = data.roadmapUrl || `/roadmaps/${ageGroup}.html`;
     const videoUrl = data.videoUrl || `/videos/${state.partnerCity}-${ageGroup}.mp4`;
 
     $('#btn-play-video').addEventListener('click', () => {
       const v = $('#reward-video');
       v.src = videoUrl;
       v.hidden = false;
-      v.play();
+      v.addEventListener('error', () => {
+        v.hidden = true;
+        window.open('/videos/fallback-poster.html', '_blank');
+      }, { once: true });
+      v.play().catch(() => {
+        window.open('/videos/fallback-poster.html', '_blank');
+      });
       $('#btn-play-video').hidden = true;
     });
 

@@ -151,7 +151,7 @@ export async function onRequestPost({ request, env }) {
       ok: true,
       leadId: localId,
       alphaLeadId: alphaId,
-      roadmapUrl: `/roadmaps/${ageGroup}.pdf`,
+      roadmapUrl: `/roadmaps/${ageGroup}.html`,
       videoUrl: `/videos/${cityKey}-${ageGroup}.mp4`,
       tutor: { name: tutor.name, city: tutor.cityLocative },
       slots: buildSlots()
